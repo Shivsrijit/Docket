@@ -15,16 +15,13 @@ export const getNotifications = async (req, res) => {
 
 export const getDueNotifications = async (req, res) => {
   try {
-    // Find sent but unread notifications to push directly to active client
-    const due = await Notification.find({ user: req.user._id, status: "sent", isRead: false });
+    // Find sent but unread notifications (limited to the 10 most recent to keep payloads small)
+    // We do NOT mark them read here, so that multiple logged-in client devices can all retrieve and display them.
+    // They will be marked as read in the database when the user opens the notification drawer.
+    const due = await Notification.find({ user: req.user._id, status: "sent", isRead: false })
+      .sort({ scheduledAt: -1 })
+      .limit(10);
     
-    // Mark them read immediately so they aren't delivered repeatedly in next polling tick
-    if (due.length > 0) {
-      await Notification.updateMany(
-        { _id: { $in: due.map(n => n._id) } },
-        { isRead: true }
-      );
-    }
     res.status(200).json(due);
   } catch (error) {
     console.error("Error in getDueNotifications controller:", error.message);

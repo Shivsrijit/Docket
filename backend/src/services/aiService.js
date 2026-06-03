@@ -22,11 +22,17 @@ const activeAnalysisTimeouts = new Map();
 const hasTimeIndicator = (text) => {
   const lowercase = text.toLowerCase();
   const timeRegexes = [
-    /\b(in|after)\s+\d+\s*(min|hour|sec|day)/i,
-    /\b\d+\s*(min|hour|sec|day)s?\b/i,
+    // Matches relative times: "in 2 mins", "after 5 hrs", "in 10s", "in 2m", "after 1h"
+    /\b(in|after)\s+\d+\s*(m|min|minute|h|hour|hr|s|sec|second|d|day)s?\b/i,
+    // Matches numbers with time units: "2m", "2 mins", "5hr", "10s"
+    /\b\d+\s*(m|min|minute|h|hour|hr|s|sec|second|d|day)s?\b/i,
+    // Matches "at 9", "at 9:30", "around 10 PM"
     /\b(at|around)\s+\d{1,2}([:.]\d{2})?\s*(am|pm)?\b/i,
+    // Matches exact time digits: "10:30", "11.15 pm"
     /\b\d{1,2}[:.]\d{2}\s*(am|pm)?\b/i,
+    // Matches "9 am", "10 PM"
     /\b\d{1,2}\s*(am|pm)\b/i,
+    // Matches period descriptors: "tomorrow", "tonight", "today", "morning", "evening", "noon", "afternoon", "night"
     /\b(tomorrow|tonight|today|morning|evening|noon|afternoon|night)\b/i
   ];
   return timeRegexes.some(regex => regex.test(lowercase));
@@ -133,14 +139,20 @@ const parseScheduledDate = (scheduledAtLocal, offsetStr) => {
 
 const extractBackupDelay = (text) => {
   const lowercase = text.toLowerCase();
-  // Scanning contents for relative minute and hour delay bounds
-  const minMatch = lowercase.match(/\b(?:in|after)?\s*(\d+)\s*(?:min|minute)s?\b/i);
+  // Scanning contents for relative minutes (supporting "m", "min", "mins", "minute", "minutes")
+  const minMatch = lowercase.match(/\b(?:in|after)?\s*(\d+)\s*(?:m|min|minute)s?\b/i);
   if (minMatch) {
     return parseInt(minMatch[1], 10) * 60 * 1000;
   }
-  const hourMatch = lowercase.match(/\b(?:in|after)?\s*(\d+)\s*(?:hour|hr)s?\b/i);
+  // Scanning contents for relative hours (supporting "h", "hr", "hrs", "hour", "hours")
+  const hourMatch = lowercase.match(/\b(?:in|after)?\s*(\d+)\s*(?:h|hour|hr)s?\b/i);
   if (hourMatch) {
     return parseInt(hourMatch[1], 10) * 60 * 60 * 1000;
+  }
+  // Scanning contents for relative seconds (supporting "s", "sec", "secs", "second", "seconds")
+  const secMatch = lowercase.match(/\b(?:in|after)?\s*(\d+)\s*(?:s|sec|second)s?\b/i);
+  if (secMatch) {
+    return parseInt(secMatch[1], 10) * 1000;
   }
   return null;
 };
@@ -226,14 +238,13 @@ const performAnalysisAndSchedule = async (note, combinedText, isEmotional, clien
       // Parsing timezone offset from browser header
       let offsetStr = "+00:00";
       if (clientTime) {
-        const match = clientTime.match(/GMT([+-]\d{2})(\d{2})/);
+        // Matches GMT+0530, GMT+05:30, GMT-500, GMT-05:00
+        const match = clientTime.match(/GMT([+-])(\d{1,2}):?(\d{2})/);
         if (match) {
-          offsetStr = `${match[1]}:${match[2]}`; // e.g. "+05:30" or "-04:00"
-        } else {
-          const simpleMatch = clientTime.match(/GMT([+-]\d{4})/);
-          if (simpleMatch) {
-            offsetStr = `${simpleMatch[1].slice(0, 3)}:${simpleMatch[1].slice(3)}`;
-          }
+          const sign = match[1];
+          const hours = match[2].padStart(2, "0");
+          const mins = match[3];
+          offsetStr = `${sign}${hours}:${mins}`; // e.g. "+05:30" or "-04:00"
         }
       } else {
         const offsetMinutes = -new Date().getTimezoneOffset();

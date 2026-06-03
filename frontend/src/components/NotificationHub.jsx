@@ -62,6 +62,19 @@ const NotificationHub = () => {
     !("Notification" in window) ? "unsupported" : Notification.permission
   );
 
+  // Track displayed alerts locally so multiple active devices can poll statelessly without stale closures
+  const displayedIdsRef = useRef(new Set());
+
+  // Initialize displayed alerts history from localStorage on boot
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem("docket-displayed-alerts") || "[]");
+      displayedIdsRef.current = new Set(saved);
+    } catch (e) {
+      displayedIdsRef.current = new Set();
+    }
+  }, []);
+
   const drawerRef = useRef(null);
 
   const requestDesktopNotificationPermission = async () => {
@@ -101,56 +114,69 @@ const NotificationHub = () => {
     try {
       const res = await api.get("/notifications/due");
       if (res.data && res.data.length > 0) {
-        res.data.forEach((item) => {
-          const config = PERSONA_CONFIGS[item.persona] || PERSONA_CONFIGS.Secretary;
-          
-          // Browser Push Notification (HTML5 Notification API)
-          if ("Notification" in window && Notification.permission === "granted") {
-            try {
-              new Notification(config.name, {
-                body: item.message,
-                icon: "/favicon.svg",
-              });
-            } catch (e) {
-              console.error("Failed to construct native push notification", e);
+        // Filter out notifications that this specific device has already displayed
+        const newDue = res.data.filter((item) => !displayedIdsRef.current.has(item._id));
+        
+        if (newDue.length > 0) {
+          newDue.forEach((item) => {
+            displayedIdsRef.current.add(item._id);
+            const config = PERSONA_CONFIGS[item.persona] || PERSONA_CONFIGS.Secretary;
+            
+            // Browser Push Notification (HTML5 Notification API)
+            if ("Notification" in window && Notification.permission === "granted") {
+              try {
+                new Notification(config.name, {
+                  body: item.message,
+                  icon: "/favicon.svg",
+                });
+              } catch (e) {
+                console.error("Failed to construct native push notification", e);
+              }
             }
-          }
-          
-          // Toast Popup Alert
-          toast.custom((t) => (
-            <div className={`${t.visible ? "animate-enter" : "animate-leave"} max-w-md w-full bg-white dark:bg-[#121214] shadow-2xl rounded-2xl pointer-events-auto flex border border-slate-200/50 dark:border-zinc-800`}>
-              <div className="flex-1 w-0 p-4">
-                <div className="flex items-start">
-                  <div className="flex-shrink-0 pt-0.5">
-                    <div className="size-9 rounded-full flex items-center justify-center font-black text-[10px] tracking-wider bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border border-slate-200/60 dark:border-zinc-700">
-                      {config.avatar}
+            
+            // Toast Popup Alert
+            toast.custom((t) => (
+              <div className={`${t.visible ? "animate-enter" : "animate-leave"} max-w-md w-full bg-white dark:bg-[#121214] shadow-2xl rounded-2xl pointer-events-auto flex border border-slate-200/50 dark:border-zinc-800`}>
+                <div className="flex-1 w-0 p-4">
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0 pt-0.5">
+                      <div className="size-9 rounded-full flex items-center justify-center font-black text-[10px] tracking-wider bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border border-slate-200/60 dark:border-zinc-700">
+                        {config.avatar}
+                      </div>
+                    </div>
+                    <div className="ml-3 flex-1">
+                      <p className="text-xs font-black text-neutral-800 dark:text-zinc-200">
+                        {config.name}
+                      </p>
+                      <p className="mt-1 text-xs text-neutral-500 dark:text-zinc-400 font-semibold line-clamp-2">
+                        {item.message}
+                      </p>
                     </div>
                   </div>
-                  <div className="ml-3 flex-1">
-                    <p className="text-xs font-black text-neutral-800 dark:text-zinc-200">
-                      {config.name}
-                    </p>
-                    <p className="mt-1 text-xs text-neutral-500 dark:text-zinc-400 font-semibold line-clamp-2">
-                      {item.message}
-                    </p>
-                  </div>
+                </div>
+                <div className="flex border-l border-slate-200/50 dark:border-zinc-800/80">
+                  <button
+                    onClick={() => {
+                      toast.dismiss(t.id);
+                      handleOpenDrawer();
+                    }}
+                    className="w-full border border-transparent rounded-none rounded-r-2xl p-4 flex items-center justify-center text-xs font-black text-black dark:text-white hover:opacity-85 focus:outline-none cursor-pointer"
+                  >
+                    Reply
+                  </button>
                 </div>
               </div>
-              <div className="flex border-l border-slate-200/50 dark:border-zinc-800/80">
-                <button
-                  onClick={() => {
-                    toast.dismiss(t.id);
-                    handleOpenDrawer();
-                  }}
-                  className="w-full border border-transparent rounded-none rounded-r-2xl p-4 flex items-center justify-center text-xs font-black text-black dark:text-white hover:opacity-85 focus:outline-none cursor-pointer"
-                >
-                  Reply
-                </button>
-              </div>
-            </div>
-          ), { duration: 6000 });
-        });
-        fetchHistory();
+            ), { duration: 6000 });
+          });
+          
+          // Save updated displayed alerts to localStorage (cap size to 100 to avoid infinite growth)
+          const idsArray = Array.from(displayedIdsRef.current);
+          const cappedIds = idsArray.slice(Math.max(0, idsArray.length - 100));
+          displayedIdsRef.current = new Set(cappedIds);
+          localStorage.setItem("docket-displayed-alerts", JSON.stringify(cappedIds));
+          
+          fetchHistory();
+        }
       }
     } catch (err) {
       console.error("Error checking due notifications:", err.message);
