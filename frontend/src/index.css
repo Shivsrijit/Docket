@@ -1,0 +1,329 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root, [data-theme="light"] {
+  --bg-app: #F8FAFC;
+  --bg-panel: #FFFFFF;
+  --bg-sidebar: #FFFFFF;
+  --bg-card: #FFFFFF;
+  --text-main: #1A1A1A;
+  --text-muted: #64748B;
+  --border-color: #F1F5F9;
+}
+
+.dark, [data-theme="dark"] {
+  --bg-app: #09090B;
+  --bg-panel: #0E0E10;
+  --bg-sidebar: #0C0C0E;
+  --bg-card: #1E1E20;
+  --text-main: #F3F4F6;
+  --text-muted: #A1A1AA;
+  --border-color: #27272A;
+}
+
+@layer base {
+  body {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-color: var(--bg-app) !important;
+    color: var(--text-main) !important;
+    @apply antialiased transition-colors duration-300;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+/* Dark theme style overrides */
+[data-theme="dark"] {
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+}
+
+/* Smooth custom glass drawer overlays */
+.drawer-backdrop {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  background-color: rgba(15, 23, 42, 0.25);
+  animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.drawer-content-slide {
+  animation: slideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+/* Beautiful custom animations for premium interaction */
+.note-card-premium {
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  transform: translateY(0);
+}
+
+.note-card-premium:hover {
+  transform: translateY(-6px) scale(1.02);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Dark mode card custom adjustments */
+[data-theme="dark"] .note-card-premium {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+}
+[data-theme="dark"] .note-card-premium:hover {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+}
+
+/* Spinner */
+.premium-spinner {
+  border-top-color: transparent;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Hide scrollbars for chrome, safari, edge, firefox, ie */
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* contentEditable Placeholder */
+[contentEditable]:empty:before {
+  content: attr(data-placeholder);
+  color: #94A3B8;
+  cursor: text;
+  opacity: 0.7;
+}
+.dark [contentEditable]:empty:before {
+  color: #71717A;
+}
+
+/* Premium WYSIWYG Editor List & Elements Styles */
+#note-content-textarea ul {
+  list-style-type: disc !important;
+  padding-left: 1.75rem !important;
+  margin-top: 0.5rem !important;
+  margin-bottom: 0.5rem !important;
+}
+
+#note-content-textarea ol {
+  list-style-type: decimal !important;
+  padding-left: 1.75rem !important;
+  margin-top: 0.5rem !important;
+  margin-bottom: 0.5rem !important;
+}
+
+#note-content-textarea li {
+  margin-bottom: 0.35rem !important;
+  line-height: 1.625 !important;
+}
+
+#note-content-textarea a {
+  color: #3b82f6 !important;
+  text-decoration: underline !important;
+  cursor: pointer !important;
+}
+
+.dark #note-content-textarea a {
+  color: #60a5fa !important;
+}
+
+#note-content-textarea input[type="checkbox"] {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  width: 1.1rem !important;
+  height: 1.1rem !important;
+  border: 2px solid #cbd5e1 !important; /* slate-300 */
+  border-radius: 6px !important;
+  background-color: transparent !important;
+  cursor: pointer !important;
+  margin-right: 0.5rem !important;
+  vertical-align: middle !important;
+  display: inline-block !important;
+  position: relative !important;
+  transition: all 0.2s ease !important;
+}
+
+.dark #note-content-textarea input[type="checkbox"] {
+  border-color: #4b5563 !important; /* zinc-600 */
+}
+
+#note-content-textarea input[type="checkbox"]:checked {
+  background-color: #000000 !important;
+  border-color: #000000 !important;
+}
+
+.dark #note-content-textarea input[type="checkbox"]:checked {
+  background-color: #ffffff !important;
+  border-color: #ffffff !important;
+}
+
+#note-content-textarea input[type="checkbox"]:checked::after {
+  content: "" !important;
+  position: absolute !important;
+  left: 4.5px !important;
+  top: 1px !important;
+  width: 4px !important;
+  height: 8px !important;
+  border: solid white !important;
+  border-width: 0 2px 2px 0 !important;
+  transform: rotate(45deg) !important;
+}
+
+.dark #note-content-textarea input[type="checkbox"]:checked::after {
+  border-color: black !important;
+}
+
+/* Notion-Style Checklist Lists */
+#note-content-textarea ul.checklist-list {
+  list-style-type: none !important;
+  padding-left: 0.25rem !important;
+}
+
+#note-content-textarea ul.checklist-list li {
+  position: relative !important;
+  padding-left: 1.75rem !important;
+  margin-bottom: 0.35rem !important;
+  line-height: 1.625 !important;
+  list-style: none !important;
+}
+
+/* Custom CSS Checkbox Box */
+#note-content-textarea ul.checklist-list li::before {
+  content: "" !important;
+  position: absolute !important;
+  left: 0 !important;
+  top: 6px !important;
+  width: 1.1rem !important;
+  height: 1.1rem !important;
+  border: 2px solid #cbd5e1 !important; /* slate-300 */
+  border-radius: 6px !important;
+  background-color: transparent !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  display: inline-block !important;
+  box-sizing: border-box !important;
+}
+
+.dark #note-content-textarea ul.checklist-list li::before {
+  border-color: #4b5563 !important; /* zinc-600 */
+}
+
+/* Checked State Box */
+#note-content-textarea ul.checklist-list li[data-checked="true"]::before {
+  background-color: #000000 !important;
+  border-color: #000000 !important;
+}
+
+.dark #note-content-textarea ul.checklist-list li[data-checked="true"]::before {
+  background-color: #ffffff !important;
+  border-color: #ffffff !important;
+}
+
+/* Checkmark Tick */
+#note-content-textarea ul.checklist-list li[data-checked="true"]::after {
+  content: "" !important;
+  position: absolute !important;
+  left: 4.5px !important;
+  top: 8px !important;
+  width: 4px !important;
+  height: 8px !important;
+  border: solid white !important;
+  border-width: 0 2px 2px 0 !important;
+  transform: rotate(45deg) !important;
+}
+
+.dark #note-content-textarea ul.checklist-list li[data-checked="true"]::after {
+  border-color: black !important;
+}
+
+/* Strikethrough checked item text slightly for Notion style */
+#note-content-textarea ul.checklist-list li[data-checked="true"] {
+  color: #94a3b8 !important; /* text-slate-400 */
+  text-decoration: line-through !important;
+}
+.dark #note-content-textarea ul.checklist-list li[data-checked="true"] {
+  color: #6b7280 !important; /* text-zinc-500 */
+}
+
+/* Premium Notion-style Headings & Blocks inside editor */
+#note-content-textarea h1 {
+  font-size: 1.875rem !important; /* text-3xl */
+  font-weight: 800 !important;
+  letter-spacing: -0.025em !important;
+  margin-top: 1.5rem !important;
+  margin-bottom: 0.5rem !important;
+  line-height: 1.25 !important;
+  color: var(--text-main) !important;
+}
+
+#note-content-textarea h2 {
+  font-size: 1.5rem !important; /* text-2xl */
+  font-weight: 700 !important;
+  letter-spacing: -0.025em !important;
+  margin-top: 1.25rem !important;
+  margin-bottom: 0.5rem !important;
+  line-height: 1.35 !important;
+  color: var(--text-main) !important;
+}
+
+#note-content-textarea blockquote {
+  border-left: 4px solid #B386FF !important;
+  padding-left: 1.1rem !important;
+  color: #64748B !important;
+  font-style: italic !important;
+  margin: 1.25rem 0 !important;
+  line-height: 1.625 !important;
+}
+.dark #note-content-textarea blockquote {
+  color: #A1A1AA !important;
+}
+
+#note-content-textarea pre {
+  background-color: #F1F5F9 !important;
+  padding: 0.85rem 1.15rem !important;
+  border-radius: 0.75rem !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
+  font-size: 0.875rem !important;
+  margin: 1.25rem 0 !important;
+  overflow-x: auto !important;
+  color: #0F172A !important;
+  border: 1px solid #E2E8F0 !important;
+}
+.dark #note-content-textarea pre {
+  background-color: #121214 !important;
+  color: #E4E4E7 !important;
+  border-color: #27272A !important;
+}
