@@ -27,6 +27,21 @@ Endpoints are rate-limited via Upstash Redis. Limits allow **30 requests per 10 
 
 ## 2. API Endpoint Specification
 
+### System Health Routes
+
+#### Server Health Check
+- **Method**: `GET`
+- **URL**: `/health` or `/api/health`
+- **Description**: Returns the system status and current timestamp. This route bypasses rate limits to accommodate continuous status check pings.
+- **Responses**:
+  - `200 OK`:
+    ```json
+    {
+      "status": "OK",
+      "timestamp": "2026-06-03T09:15:00.000Z"
+    }
+    ```
+
 ### Authentication Routes
 
 #### Sign Up User

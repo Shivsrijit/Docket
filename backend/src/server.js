@@ -23,6 +23,15 @@ const PORT = process.env.PORT || 5001 ;
 // Registering global middleware interceptors
 app.use(express.json()) ; // Parsing incoming JSON request bodies
 app.use(cors()); 
+
+// Health check endpoints (placed before rate-limiting to prevent poller blockages)
+app.get("/health", (req, res) => {
+    res.status(200).json({ status: "OK", timestamp: new Date() });
+});
+app.get("/api/health", (req, res) => {
+    res.status(200).json({ status: "OK", timestamp: new Date() });
+});
+
 app.use(ratelimiter) ; 
 app.use((req,res,next) =>{
     console.log(`Request method is ${req.method} & request URL is ${req.url}`); 
