@@ -327,3 +327,24 @@
   color: #E4E4E7 !important;
   border-color: #27272A !important;
 }
+
+/* Mobile Touch Drag and Drop Hover Indicators */
+.touch-hover-highlight {
+  transform: scale(1.04) translateY(-6px) !important;
+  filter: brightness(1.05) !important;
+  outline: 2px dashed rgba(0, 0, 0, 0.3) !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+.dark .touch-hover-highlight {
+  outline: 2px dashed rgba(255, 255, 255, 0.4) !important;
+}
+.touch-hover-highlight-compact {
+  background-color: #f3f4f6 !important; /* bg-neutral-100 */
+  border: 2px dashed #000000 !important;
+  transform: scale(1.02) !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+.dark .touch-hover-highlight-compact {
+  background-color: #18181b !important; /* bg-zinc-900 */
+  border: 2px dashed #ffffff !important;
+}

@@ -31,6 +31,7 @@ const FolderCard = ({ folder, noteCount, onDropNote, onClickFolder, isActive, la
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         onClick={() => onClickFolder(folder.name)}
+        data-folder-name={folder.name}
         className={`w-full p-4 rounded-[1.2rem] flex items-center justify-between cursor-pointer select-none transition-all duration-200 border ${
           isActive
             ? "bg-black dark:bg-white text-white dark:text-zinc-950 shadow-md border-transparent"
@@ -69,6 +70,7 @@ const FolderCard = ({ folder, noteCount, onDropNote, onClickFolder, isActive, la
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       onClick={() => onClickFolder(folder.name)}
+      data-folder-name={folder.name}
       className={`relative h-[120px] cursor-pointer transition-all duration-300 ease-out select-none flex flex-col justify-end ${
         isDragOver ? "scale-[1.04] -translate-y-1.5" : "hover:scale-[1.02] hover:-translate-y-0.5"
       } ${isActive ? "scale-[1.03] -translate-y-1 shadow-lg" : ""}`}

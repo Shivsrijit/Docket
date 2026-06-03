@@ -24,3 +24,30 @@ self.addEventListener('notificationclick', (event) => {
     })
   );
 });
+
+// Listen to incoming Web Push notifications from the server in the background
+self.addEventListener('push', (event) => {
+  let data = { title: "Docket Assistant", message: "You have a new check-in." };
+
+  if (event.data) {
+    try {
+      data = event.data.json();
+    } catch (e) {
+      data = { title: "Docket Assistant", message: event.data.text() };
+    }
+  }
+
+  const options = {
+    body: data.message || data.body || "",
+    icon: "/favicon.svg",
+    badge: "/favicon.svg",
+    vibrate: [200, 100, 200],
+    data: {
+      url: data.url || "/"
+    }
+  };
+
+  event.waitUntil(
+    self.registration.showNotification(data.title || "Docket Assistant", options)
+  );
+});

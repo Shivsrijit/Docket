@@ -1,10 +1,115 @@
 import { Pencil, Star, Folder } from "lucide-react";
 import { Link } from "react-router-dom";
 import { formatDate, stripHtml } from "../lib/utils";
+import { useRef } from "react";
 import toast from "react-hot-toast";
 import api from "../lib/axios";
 
-const NoteCard = ({ note, setNotes, onEditClick }) => {
+const NoteCard = ({ note, setNotes, onEditClick, onDropNote }) => {
+  const touchStartRef = useRef({ x: 0, y: 0 });
+  const hasMovedRef = useRef(false);
+  const isDraggingRef = useRef(false);
+  const ghostRef = useRef(null);
+  const activeHoverElRef = useRef(null);
+
+  const handleTouchStart = (e) => {
+    const touch = e.touches[0];
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+    hasMovedRef.current = false;
+    isDraggingRef.current = false;
+  };
+
+  const handleTouchMove = (e) => {
+    const touch = e.touches[0];
+    const dx = touch.clientX - touchStartRef.current.x;
+    const dy = touch.clientY - touchStartRef.current.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+
+    // If moved more than 10px, trigger dragging mode
+    if (dist > 10) {
+      hasMovedRef.current = true;
+      
+      // Prevent browser default touch behavior (like page scrolling) while dragging
+      if (e.cancelable) {
+        e.preventDefault();
+      }
+
+      if (!isDraggingRef.current) {
+        isDraggingRef.current = true;
+        
+        // Create drag-and-drop ghost preview element
+        const originalEl = e.currentTarget;
+        const ghost = originalEl.cloneNode(true);
+        ghost.id = "touch-drag-ghost";
+        ghost.style.position = "fixed";
+        ghost.style.pointerEvents = "none";
+        ghost.style.opacity = "0.75";
+        ghost.style.zIndex = "1000";
+        ghost.style.width = originalEl.offsetWidth + "px";
+        ghost.style.height = originalEl.offsetHeight + "px";
+        ghost.style.transition = "none";
+        ghost.style.transform = "rotate(3deg) scale(0.95)";
+        document.body.appendChild(ghost);
+        ghostRef.current = ghost;
+      }
+
+      // Move the ghost element to align with the finger
+      if (ghostRef.current) {
+        ghostRef.current.style.left = (touch.clientX - ghostRef.current.offsetWidth / 2) + "px";
+        ghostRef.current.style.top = (touch.clientY - ghostRef.current.offsetHeight / 2) + "px";
+      }
+
+      // Check what element is currently under the touch point
+      const target = document.elementFromPoint(touch.clientX, touch.clientY);
+      const folderEl = target ? target.closest("[data-folder-name]") : null;
+
+      if (folderEl !== activeHoverElRef.current) {
+        // Remove highlight class from the previous folder element
+        if (activeHoverElRef.current) {
+          activeHoverElRef.current.classList.remove("touch-hover-highlight");
+          activeHoverElRef.current.classList.remove("touch-hover-highlight-compact");
+        }
+        
+        // Add highlight class to the currently hovered folder element
+        if (folderEl) {
+          if (folderEl.classList.contains("w-full") && folderEl.classList.contains("p-4")) {
+            folderEl.classList.add("touch-hover-highlight-compact");
+          } else {
+            folderEl.classList.add("touch-hover-highlight");
+          }
+        }
+        activeHoverElRef.current = folderEl;
+      }
+    }
+  };
+
+  const handleTouchEnd = (e) => {
+    // If dragging was active, clean up ghost and apply drop logic
+    if (isDraggingRef.current) {
+      if (ghostRef.current) {
+        ghostRef.current.remove();
+        ghostRef.current = null;
+      }
+
+      if (activeHoverElRef.current) {
+        const folderName = activeHoverElRef.current.getAttribute("data-folder-name");
+        
+        // Remove highlight classes
+        activeHoverElRef.current.classList.remove("touch-hover-highlight");
+        activeHoverElRef.current.classList.remove("touch-hover-highlight-compact");
+        
+        if (onDropNote) {
+          onDropNote(note._id, folderName);
+        }
+        activeHoverElRef.current = null;
+      }
+      
+      // Stop the click from firing (since the user was dragging, not tapping)
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  };
+
   const handleTogglePin = async (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -39,6 +144,9 @@ const NoteCard = ({ note, setNotes, onEditClick }) => {
         e.dataTransfer.setData("noteId", note._id);
         e.dataTransfer.effectAllowed = "move";
       }}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
       onClick={() => onEditClick(note._id)}
       className="note-card-premium group relative rounded-[2rem] p-7 flex flex-col justify-between h-[230px] cursor-grab active:cursor-grabbing select-none"
       style={{ backgroundColor: note.color || "#FDB851" }}
