@@ -45,6 +45,51 @@ frontend/
 
 ---
 
+## React Component Hierarchy
+
+Docket's components are structured hierarchically under the session state coordinator `App.jsx`. Client-side sub-paths dynamically mount specific editor canvases and layouts:
+
+```mermaid
+graph TD
+    %% Styling Definitions
+    classDef page fill:#1E293B,stroke:#64748B,stroke-width:2px,color:#F8FAFC;
+    classDef comp fill:#0F172A,stroke:#38BDF8,stroke-width:2px,color:#F8FAFC;
+    classDef overlay fill:#7F1D1D,stroke:#F87171,stroke-width:2px,color:#F8FAFC;
+    classDef entry fill:#312E81,stroke:#818CF8,stroke-width:2px,color:#F8FAFC;
+
+    App["App (App.jsx Root State)"]:::entry
+    AuthPage["AuthPage (Auth Panel & Google Sign-In)"]:::page
+    HomePage["HomePage (Main Workspace & Filters)"]:::page
+    
+    Toaster["Toaster (react-hot-toast Overlays)"]:::comp
+    NoteCard["NoteCard (Pinned/Regular Note Cards)"]:::comp
+    ColorSelector["ColorPaletteSelector (Card Color Change)"]:::comp
+    FolderCard["FolderCard (Dropzone Category Columns)"]:::comp
+    NotesNotFound["NotesNotFound (Workspace Empty View)"]:::comp
+    
+    CreatePage["CreatePage (Notion Editor /create)"]:::page
+    NoteDetailPage["NoteDetailPage (Notion Editor /note/:id)"]:::page
+    RateLimitedUI["RateLimitedUI (HTTP 429 Cooldown Banner)"]:::overlay
+    NotificationHub["NotificationHub (Bell Drawer & AI Chat Sidebar)"]:::comp
+    
+    %% Relationships
+    App --> AuthPage
+    App --> HomePage
+    App --> Toaster
+    
+    HomePage --> FolderCard
+    HomePage --> NoteCard
+    HomePage --> NotesNotFound
+    HomePage --> CreatePage
+    HomePage --> NoteDetailPage
+    HomePage --> RateLimitedUI
+    HomePage --> NotificationHub
+    
+    NoteCard --> ColorSelector
+```
+
+---
+
 ## Authentication & Form Validation Specifications
 
 Docket enforces strict validation rules on the frontend to ensure database sanitization and clean user inputs before making API requests:
