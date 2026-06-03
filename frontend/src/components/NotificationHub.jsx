@@ -51,6 +51,34 @@ const PERSONA_CONFIGS = {
   },
 };
 
+// Helper to display system native notifications supporting both desktop (Notification constructor) and mobile (Service Worker registration)
+const showNativeNotification = (title, body) => {
+  if (!("Notification" in window) || Notification.permission !== "granted") return;
+  
+  if (navigator.serviceWorker && navigator.serviceWorker.ready) {
+    navigator.serviceWorker.ready.then((registration) => {
+      registration.showNotification(title, {
+        body: body,
+        icon: "/favicon.svg",
+        vibrate: [200, 100, 200],
+        badge: "/favicon.svg",
+      });
+    }).catch((e) => {
+      try {
+        new Notification(title, { body, icon: "/favicon.svg" });
+      } catch (err) {
+        console.error("Fallback native notification failed:", err);
+      }
+    });
+  } else {
+    try {
+      new Notification(title, { body, icon: "/favicon.svg" });
+    } catch (e) {
+      console.error("Standard native notification failed:", e);
+    }
+  }
+};
+
 const NotificationHub = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
@@ -96,10 +124,7 @@ const NotificationHub = () => {
       setPermissionState(permission);
       if (permission === "granted") {
         toast.success("Desktop notifications enabled!");
-        new Notification("Docket", {
-          body: "System notifications are now active on this device.",
-          icon: "/favicon.svg",
-        });
+        showNativeNotification("Docket", "System notifications are now active on this device.");
       } else if (permission === "denied") {
         toast.error("Notification permission denied.");
       }
@@ -122,17 +147,8 @@ const NotificationHub = () => {
             displayedIdsRef.current.add(item._id);
             const config = PERSONA_CONFIGS[item.persona] || PERSONA_CONFIGS.Secretary;
             
-            // Browser Push Notification (HTML5 Notification API)
-            if ("Notification" in window && Notification.permission === "granted") {
-              try {
-                new Notification(config.name, {
-                  body: item.message,
-                  icon: "/favicon.svg",
-                });
-              } catch (e) {
-                console.error("Failed to construct native push notification", e);
-              }
-            }
+            // Browser Push Notification (HTML5 Notification API / SW push)
+            showNativeNotification(config.name, item.message);
             
             // Toast Popup Alert
             toast.custom((t) => (
@@ -249,10 +265,7 @@ const NotificationHub = () => {
         const res = await Notification.requestPermission();
         setPermissionState(res);
         if (res === "granted") {
-          new Notification("Docket", {
-            body: "System notifications are now active on this device.",
-            icon: "/favicon.svg",
-          });
+          showNativeNotification("Docket", "System notifications are now active on this device.");
         }
       } catch (err) {
         console.error("Failed auto-requesting notification permission:", err);
