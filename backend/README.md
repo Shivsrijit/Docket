@@ -143,6 +143,10 @@ Manages scheduled alarms and AI dialogue logs.
 * `POST /:id/reply`: Accepts user responses and schedules immediate AI dialogue responses.
 * `DELETE /clear`: Purges the notification log history.
 
+### 5. Health Check (System Health -> `/health` / `/api/health`)
+* `GET /health`: Returns server status and timestamp. Bypasses the rate-limiting filters to accommodate regular polling.
+* `GET /api/health`: Alternative ping target for container orchestration or platform checks.
+
 ---
 
 ## Error Handling, Status Codes, & Debugging
