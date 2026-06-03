@@ -1,5 +1,4 @@
 import Notification from "../models/Notification.js";
-import PushSubscription from "../models/PushSubscription.js";
 import { generateFollowUp } from "../services/aiService.js";
 
 export const getNotifications = async (req, res) => {
@@ -77,43 +76,6 @@ export const clearNotifications = async (req, res) => {
     res.status(200).json({ message: "Notification history cleared successfully" });
   } catch (error) {
     console.error("Error in clearNotifications controller:", error.message);
-    res.status(500).json({ message: "Internal server error" });
-  }
-};
-
-export const getVapidPublicKey = async (req, res) => {
-  try {
-    const publicKey = process.env.VAPID_PUBLIC_KEY || global.generatedVapidPublicKey;
-    if (!publicKey) {
-      return res.status(404).json({ message: "VAPID Public Key not configured yet" });
-    }
-    res.status(200).json({ publicKey });
-  } catch (error) {
-    console.error("Error in getVapidPublicKey controller:", error.message);
-    res.status(500).json({ message: "Internal server error" });
-  }
-};
-
-export const subscribePush = async (req, res) => {
-  try {
-    const subscription = req.body;
-    if (!subscription || !subscription.endpoint || !subscription.keys || !subscription.keys.auth || !subscription.keys.p256dh) {
-      return res.status(400).json({ message: "Invalid subscription details" });
-    }
-
-    // Upsert the subscription endpoint to ensure we do not have duplicate entries for a single device/browser session
-    await PushSubscription.findOneAndUpdate(
-      { "subscription.endpoint": subscription.endpoint },
-      {
-        user: req.user._id,
-        subscription: subscription
-      },
-      { upsert: true, new: true }
-    );
-
-    res.status(201).json({ message: "Push subscription registered successfully" });
-  } catch (error) {
-    console.error("Error in subscribePush controller:", error.message);
     res.status(500).json({ message: "Internal server error" });
   }
 };

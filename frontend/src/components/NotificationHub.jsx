@@ -79,22 +79,6 @@ const showNativeNotification = (title, body) => {
   }
 };
 
-// Helper function to translate base64 keys into Uint8Array for PushManager subscribe
-const urlBase64ToUint8Array = (base64String) => {
-  const padding = '='.repeat((4 - base64String.length % 4) % 4);
-  const base64 = (base64String + padding)
-    .replace(/\-/g, '+')
-    .replace(/_/g, '/');
-
-  const rawData = window.atob(base64);
-  const outputArray = new Uint8Array(rawData.length);
-
-  for (let i = 0; i < rawData.length; ++i) {
-    outputArray[i] = rawData.charCodeAt(i);
-  }
-  return outputArray;
-};
-
 const NotificationHub = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
@@ -121,33 +105,6 @@ const NotificationHub = () => {
 
   const drawerRef = useRef(null);
 
-  // Subscribe to backend push services via registered Service Worker
-  const subscribeToPushNotifications = async () => {
-    if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
-      console.warn("Push notifications are not supported on this device.");
-      return;
-    }
-
-    try {
-      const reg = await navigator.serviceWorker.ready;
-      
-      // Get VAPID public key from backend
-      const keyRes = await api.get("/notifications/vapid-public-key");
-      const vapidPublicKey = keyRes.data.publicKey;
-      const applicationServerKey = urlBase64ToUint8Array(vapidPublicKey);
-      
-      const subscription = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: applicationServerKey
-      });
-      
-      await api.post("/notifications/subscribe", subscription);
-      console.log("Successfully registered device to receive Web Push alerts.");
-    } catch (err) {
-      console.error("Failed to subscribe device for Web Push:", err);
-    }
-  };
-
   const requestDesktopNotificationPermission = async () => {
     if (!("Notification" in window)) {
       toast.error("Desktop notifications are not supported in this browser.");
@@ -168,7 +125,6 @@ const NotificationHub = () => {
       if (permission === "granted") {
         toast.success("Desktop notifications enabled!");
         showNativeNotification("Docket", "System notifications are now active on this device.");
-        subscribeToPushNotifications();
       } else if (permission === "denied") {
         toast.error("Notification permission denied.");
       }
@@ -245,17 +201,10 @@ const NotificationHub = () => {
 
   // 1. Initial Load, Event Syncing, & Lightweight Poller (30s) for Device Notifications
   useEffect(() => {
-    if ("Notification" in window) {
-      if (Notification.permission === "default") {
-        Notification.requestPermission().then((res) => {
-          setPermissionState(res);
-          if (res === "granted") {
-            subscribeToPushNotifications();
-          }
-        }).catch(() => {});
-      } else if (Notification.permission === "granted") {
-        subscribeToPushNotifications();
-      }
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission().then((res) => {
+        setPermissionState(res);
+      }).catch(() => {});
     }
     fetchHistory();
 
@@ -317,7 +266,6 @@ const NotificationHub = () => {
         setPermissionState(res);
         if (res === "granted") {
           showNativeNotification("Docket", "System notifications are now active on this device.");
-          subscribeToPushNotifications();
         }
       } catch (err) {
         console.error("Failed auto-requesting notification permission:", err);

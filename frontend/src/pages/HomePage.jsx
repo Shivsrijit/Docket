@@ -284,7 +284,7 @@ const HomePage = ({ user, setUser, theme, setTheme }) => {
       {/* 3. Center Workspace Area (Independent Scrollable Area) */}
       <main className="flex-1 md:ml-[100px] lg:mr-[280px] p-4 sm:p-8 md:p-10 flex flex-col gap-6 md:gap-8 min-h-screen">
         
-        {/* Dynamic Search */}
+        {/* Dynamic Search & Mobile Layout */}
         <section className="flex flex-col gap-6 border-b border-slate-100 dark:border-zinc-900/60 pb-6 w-full">
           
           {/* Top Search with expanded left icon padding */}
@@ -298,11 +298,9 @@ const HomePage = ({ user, setUser, theme, setTheme }) => {
               className="w-full bg-white dark:bg-zinc-900/40 text-neutral-800 dark:text-zinc-200 border border-slate-200/60 dark:border-zinc-800/80 rounded-2xl py-3 pl-16 pr-5 text-sm placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all shadow-sm"
             />
           </div>
-        </section>
 
-        {/* 3.1 Mobile & Tablet Category horizontal scroll slider (Sticky top on mobile/tablet) */}
-        <div className="lg:hidden sticky top-[73px] md:top-0 z-30 bg-[#F8FAFC] dark:bg-[#09090B] -mx-4 px-4 sm:-mx-8 sm:px-8 pt-4 pb-2 border-b border-slate-100 dark:border-zinc-900/60 transition-colors duration-300">
-          <div className="flex flex-col gap-4">
+          {/* 3.1 Mobile & Tablet Category horizontal scroll slider (Hidden on desktop) */}
+          <div className="lg:hidden flex flex-col gap-4">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-neutral-400 uppercase tracking-widest">Categories</span>
               <button
@@ -318,18 +316,6 @@ const HomePage = ({ user, setUser, theme, setTheme }) => {
               {/* All Notes Pocket Card */}
               <div
                 onClick={() => setSelectedFolder("")}
-                data-folder-name=""
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  setIsInboxDragOver(true);
-                }}
-                onDragLeave={() => setIsInboxDragOver(false)}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  setIsInboxDragOver(false);
-                  const noteId = e.dataTransfer.getData("noteId");
-                  if (noteId) handleDropNote(noteId, "");
-                }}
                 className={`relative snap-center flex-shrink-0 w-[145px] h-[120px] cursor-pointer transition-all duration-300 ease-out select-none flex flex-col justify-end ${
                   selectedFolder === "" ? "scale-[1.03] -translate-y-1 shadow-lg" : ""
                 }`}
@@ -382,7 +368,7 @@ const HomePage = ({ user, setUser, theme, setTheme }) => {
               ))}
             </div>
           </div>
-        </div>
+        </section>
 
         {/* Workspace Center Content displaying ONLY notes cards */}
         <section className="flex-1 flex flex-col gap-6">
@@ -472,7 +458,6 @@ const HomePage = ({ user, setUser, theme, setTheme }) => {
                       note={note}
                       setNotes={setNotes}
                       onEditClick={(id) => navigate(`/note/${id}`)}
-                      onDropNote={handleDropNote}
                     />
                   ))}
                 </div>
